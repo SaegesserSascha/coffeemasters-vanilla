@@ -3,13 +3,15 @@ const Router = {
     document.querySelectorAll("a.navlink").forEach((a) => {
       a.addEventListener("click", (event) => {
         event.preventDefault();
-        const url = event.target.getAttribute("href");
-        Router.go(url);
+        const href = event.target.getAttribute("href");
+        Router.go(href);
       });
     });
+    // It listen for history changes
     window.addEventListener("popstate", (event) => {
       Router.go(event.state.route, false);
     });
+    // Process initial URL
     Router.go(location.pathname);
   },
   go: (route, addToHistory = true) => {
@@ -25,21 +27,34 @@ const Router = {
         pageElement = document.createElement("order-page");
         break;
       default:
-        if (route.startsWith("product-")) {
+        if (route.startsWith("/product-")) {
           pageElement = document.createElement("details-page");
-          const paramId = route.substring(route.lastIndexOf("-") + 1);
-          pageElement.dataset.id = paramId;
+          pageElement.dataset.productId = route.substring(
+            route.lastIndexOf("-") + 1
+          );
         }
+        break;
     }
     if (pageElement) {
-      const cache = document.querySelector("main");
-      if (cache.children.length > 0) {
-        cache.children[0].remove();
+      // get current page element
+      let currentPage = document.querySelector("main").firstElementChild;
+      if (currentPage) {
+        let fadeOut = currentPage.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: 200,
+        });
+        fadeOut.addEventListener("finish", () => {
+          currentPage.remove();
+          document.querySelector("main").appendChild(pageElement);
+          let fadeIn = pageElement.animate([{ opacity: 0 }, { opacity: 1 }], {
+            duration: 200,
+          });
+        });
+      } else {
+        document.querySelector("main").appendChild(pageElement);
       }
-      cache.appendChild(pageElement);
-      window.scrollX = 0;
-      window.scrollY = 0;
     }
+
+    window.scrollX = 0;
   },
 };
 
